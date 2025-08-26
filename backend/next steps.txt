@@ -1,0 +1,130 @@
+						-- FILE UPLOADER APP --
+
+# requirements
+
+> user can login and logout and signup
+> user can make folders and it (can be nested)
+> user can upload files into any of his folders
+> user can delete any folder (this will delete any folders or files inside it)
+> user can share file or folder url
+ > user can chose if this link is private or puplic or shared for some listed users
+ > (for folders) user can chose if he want this link access children folders or not
+> frontend should support file preview(text or image or video) 
+
+
+* create the database schema
+ * user has (id, username, email, password,created_at)
+ * folder has (id, name,size,isRoot,ownerId,created_at)
+ * children has (folder_id,object_id,is_file) // object here refere to file or folder
+ * file has (id, name,url,resource_type,format,ownerId, size,folder_id,created_at)
+ * refresh_tokens has (id, user_id,token_uuid,hashed_refresh_token,expires_at,created_at)
+ * shared has (object_id,user_id) // object here refere to file or folder
+ * permision has (object_id,type,nested) // object here refere to file or folder
+                                         // type in [private , shared, public]
+ - root has (userId,folderId)
+
+
+- implement Prisma services
+ * AuthService.js
+  * login(usernameOrEmail,password)  return {user_id,refresh_token}
+  * signup(username,email,password) return {user_id}
+  * verifyRefreshToken(refresh_token) return true or false
+  * logout(refreshToken)
+
+ - userServics.js
+ - fileService.js
+ - folderService.js
+ - shareSrevice.js
+
+* implement AuthRoutes
+ * make signup endpoint (make all ids using uuid)
+ * make login using jwt 
+  * save user_id in access_token and save the refresh_token into db
+ * make refresh endpoint
+
+- implement upload endpoint
+ - its a post request take {file, current_folder} in body
+ - save this file on disk using multer
+ - upload this file into (cloudinary) via its api
+ - save url reteived from (cloudinary) into file table with all file data
+ - update children table (current_folder -> uploaded_file)
+ - delete this file from disk
+ - return current folder id  and current folder path(roor_id/child1_id/...)
+
+- implement getRoot which return root_id for current user
+
+- implement create folder which take current folder and its name and make new folder inside it
+ - update childeren table 
+ - return {newFolderPath,newFolderId}
+- implement get folder take {folder_id} return {folder_path,folder_id,date:[this should contains all objects_ids in this folder like {id,isFile}]}
+- implement update folder take {folder_id,new_name} update it return {folder_id,new_name}
+- implement delete folder just bfs on children and delete them then delete this folder
+
+- implement get file take {file_id} return {file url}
+- implement delete file take {file_id} and delete it
+
+- implement share endpoint as get request that take object_id(file or folder) and check if this user has access to it or not if it has access return url if its file or folder object
+- implement share endpoint as post request that take {object_id,premesion} and change the permision of it
+ 
+
+
+
+
+cloudinary.uploader.upload("file.pdf", { public_id: "a9f87sd9f8sd7f9sd" });
+{
+  "asset_id": "xxx",
+  "public_id": "myfile",
+  "resource_type": "raw",     <-- here
+  "format": "pdf",
+  "secure_url": "https://res.cloudinary.com/.../raw/upload/v1692451234/myfile.pdf"
+}
+
+multer meta data
+{
+    fieldname: 'files',
+    originalname: 'test.png',
+    encoding: '7bit',
+    mimetype: 'image/png',
+    destination: 'D:\\vscode\\nodejs\\express\\file-uploader-app\\backend\\tempUploads',
+    filename: '7bf47d42-1f42-449f-a092-ae5ba8e26aa9.png',
+    path: 'D:\\vscode\\nodejs\\express\\file-uploader-app\\backend\\tempUploads\\7bf47d42-1f42-449f-a092-ae5ba8e26aa9.png',
+    size: 98622
+  },
+
+{
+    asset_id: '2d39aafec677db8473e2dff51b0b4312',
+    public_id: 'ef5fa0a8-af8e-4b34-b44c-b305f8566f69',
+    version: 1755954067,
+    version_id: 'ed20ebb4014f9649782dc859526cdc09',
+    signature: 'f6b290676cd2dd168d3c9692110354cc49a70f3d',
+    width: 675,
+    height: 1200,
+    format: 'jpg',
+    resource_type: 'image',
+    created_at: '2025-08-23T13:01:07Z',
+    tags: [],
+    bytes: 98622,
+    type: 'upload',
+    etag: '221350c0846d42f4200c7e743b51b708',
+    placeholder: false,
+    url: 'http://res.cloudinary.com/dd5rxacvu/image/upload/v1755954067/ef5fa0a8-af8e-4b34-b44c-b305f8566f69.jpg',
+    secure_url: 'https://res.cloudinary.com/dd5rxacvu/image/upload/v1755954067/ef5fa0a8-af8e-4b34-b44c-b305f8566f69.jpg',
+    asset_folder: '',
+    display_name: 'ef5fa0a8-af8e-4b34-b44c-b305f8566f69',
+    original_filename: 'ef5fa0a8-af8e-4b34-b44c-b305f8566f69',
+    original_extension: 'png',
+    api_key: '897356236488558',
+    originalname: 'test.png'
+  },
+i making backend project now using nodejs/express and iam finished from writing project details by my self
+i will give you this details
+i want you to give me a feedback like what is the scale of this project how it help me in my cv what you suggest
+dont write any code i want to make it myself
+
+On your CV, you could describe it like:
+
+“Built a file storage and sharing system with authentication, nested folders, and permission management (similar to Google Drive).
+ Integrated Cloudinary for file hosting and implemented JWT authentication with refresh tokens.”
+
+
+***************

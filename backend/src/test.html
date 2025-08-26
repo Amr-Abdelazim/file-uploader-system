@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Upload Test with Token</title>
+  </head>
+  <body>
+    <h2>Upload Test</h2>
+
+    <label>Access Token:</label>
+    <input
+      type="text"
+      id="tokenInput"
+      placeholder="Paste your access token here"
+      style="width: 400px"
+    /><br /><br />
+
+    <!-- Upload Files -->
+    <form id="fileForm" enctype="multipart/form-data">
+      <label>Select Files:</label>
+      <input type="file" id="fileInput" name="files" multiple /><br /><br />
+      <button type="submit">Upload Files</button>
+    </form>
+
+    <br />
+    <hr />
+    <br />
+
+    <!-- Upload Folders -->
+    <form id="folderForm" enctype="multipart/form-data">
+      <label>Select Folder:</label>
+      <input
+        type="file"
+        id="folderInput"
+        name="files"
+        webkitdirectory
+        directory
+        multiple
+      /><br /><br />
+      <button type="submit">Upload Folder</button>
+    </form>
+
+    <pre id="output"></pre>
+
+    <script>
+      async function upload(input) {
+        const formData = new FormData();
+        for (const file of input.files) {
+          console.log("hi");
+          console.log(file.webkitRelativePath);
+          formData.append("files", file);
+          formData.append("paths[]", file.webkitRelativePath || file.name);
+        }
+
+        const token = document.getElementById("tokenInput").value.trim();
+
+        try {
+          const res = await fetch(
+            "http://localhost:3000/api/upload/640981d9-c7a0-491c-b130-f427df8ac2fb",
+            {
+              // change to your API endpoint
+              method: "POST",
+              headers: {
+                Authorization: "Bearer " + token,
+              },
+              body: formData,
+            }
+          );
+          const text = await res.text();
+          document.getElementById("output").textContent = text;
+        } catch (err) {
+          document.getElementById("output").textContent = "Error: " + err;
+        }
+      }
+
+      document
+        .getElementById("fileForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          await upload(document.getElementById("fileInput"));
+        });
+
+      document
+        .getElementById("folderForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          await upload(document.getElementById("folderInput"));
+        });
+    </script>
+  </body>
+</html>

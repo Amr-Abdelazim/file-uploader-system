@@ -1,0 +1,112 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/**
+ * - create the database schema
+ * - user has (id, username, email, password, root_id,created_at)
+ * - folder has (id, name,size,parent_id,created_at)
+ * - children has (folder_id,object_id,is_file) // object here refere to file or folder
+ * - file has (id, name,url,resource_type,format, size,folder_id,created_at)
+ * - refresh_tokens has (id, user_id,token_uuid,hashed_refresh_token,expires_at,created_at)
+ * - shared has (object_id,user_id) // object here refere to file or folder
+ * - permission has (object_id,type,nested) // object here refere to file or folder
+ * // type in [private , shared, public]
+ */
+
+model User {
+  id             String          @id @default(uuid())
+  username       String          @unique
+  email          String          @unique
+  hashedPassword String
+  createdAt      DateTime        @default(now())
+  RefreshTokens  RefreshTokens[]
+  Shared         Shared[]
+  Folders        Folder[]
+  Files          File[]
+  root           root?
+}
+
+model Folder {
+  id        String     @id @default(uuid())
+  name      String
+  size      Int        @default(0)
+  ownerId   String
+  createdAt DateTime   @default(now())
+  User      User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  childs    Children[]
+}
+
+model File {
+  id           String   @id @default(uuid())
+  name         String
+  url          String
+  resourceType String
+  mimetype     String
+  size         Int      @default(0)
+  createdAt    DateTime @default(now())
+  ownerId      String
+  User         User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+}
+
+model Children {
+  folderId String
+  objectId String
+  isFile   Boolean // is objectId is file?
+  Folder   Folder  @relation(fields: [folderId], references: [id], onDelete: Cascade)
+
+  @@id([folderId, objectId])
+}
+
+model RefreshTokens {
+  id                 String   @id @default(uuid())
+  userId             String
+  tokenUuid          String   @unique
+  hashedRefreshToken String   @unique
+  expiresAt          DateTime
+  createdAt          DateTime @default(now())
+  User               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tokenUuid, userId])
+}
+
+model Shared {
+  objectId String
+  userId   String
+  User     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([objectId, userId])
+  @@index([objectId, userId])
+}
+
+enum PermissionType {
+  private
+  shared
+  public
+}
+
+model Permission {
+  objectId String         @unique
+  type     PermissionType
+  nested   Boolean
+}
+
+// denormalized tables
+
+model root {
+  folderId String @id
+  userId   String @unique
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
