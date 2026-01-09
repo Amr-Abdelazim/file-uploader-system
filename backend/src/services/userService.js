@@ -12,5 +12,17 @@ async function isMyFolder(userId, folderId) {
     if (!res) return false;
     return (res.ownerId === userId);
 }
+async function isMyFile(userId, fileId) {
+    const res = await prisma.file.findUnique({
+        where: {
+            id: fileId
+        },
+        select: {
+            ownerId: true
+        }
+    });
+    if (!res) return false;
+    return (res.ownerId === userId);
+}
 
-export default { isMyFolder };
+export default { isMyFolder, isMyFile };

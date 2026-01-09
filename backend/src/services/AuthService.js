@@ -23,6 +23,7 @@ async function generateRefreshToken(userId) {
 
 
 async function verifyRefreshToken(refreshToken) {
+    if (!refreshToken) throw new CustomError("Invalid token", 401);
     const [tokenUuid, secret] = refreshToken.split('.');
     const res = await prisma.refreshTokens.findUnique({
         where: { tokenUuid },

@@ -3,7 +3,7 @@ import { body, param } from "express-validator";
 import userService from "../../services/userService.js";
 
 
-function fileUpload() {
+function validateFolder() {
     const validations = [
         param("folderId")
             .trim()
@@ -23,4 +23,4 @@ function fileUpload() {
     return validate(validations);
 }
 
-export default { fileUpload };
+export default { validateFolder };

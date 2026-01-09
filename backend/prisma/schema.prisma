@@ -52,7 +52,7 @@ model Folder {
 model File {
   id           String   @id @default(uuid())
   name         String
-  url          String
+  public_id    String
   resourceType String
   mimetype     String
   size         Int      @default(0)

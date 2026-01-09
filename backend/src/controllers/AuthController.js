@@ -17,13 +17,13 @@ async function login(req, res, next) {
     const access_token = jwt.sign(
         { userId: user.userId },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: '1h' } // 1m just for testing
+        { expiresIn: '1h' } // 1h just for testing
     );
     res.cookie("refresh_token", user.refresh_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: 'strict',
-        maxAge: 3 * 60 * 60 * 1000 // 3m for testing
+        maxAge: 3 * 60 * 60 * 1000 // 3h for testing
     });
     res.json({ access_token });
 }
@@ -37,7 +37,7 @@ async function refreshToken(req, res, next) {
     const access_token = jwt.sign(
         { userId: user.userId },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: '1h' } // 1m just for testing
+        { expiresIn: '1h' } // 1h just for testing
     );
     res.json({ access_token });
 }

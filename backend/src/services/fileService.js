@@ -12,7 +12,6 @@ async function createFile(parentId, fileData) {
             id: true
         }
     });
-    console.log("**********************", parentId);
     await prisma.children.create({
         data: {
             folderId: parentId,
@@ -20,6 +19,7 @@ async function createFile(parentId, fileData) {
             isFile: true
         }
     });
+    await folderService.sizeProp(createdFile.id, fileData.size);
     return createdFile.id;
 }
 
@@ -32,10 +32,38 @@ async function createFiles(relativeRootId, filesData, paths) {
         return arr;
     });
     const resolvedPathes = await folderService.resolvePaths(relativeRootId, pathsArray);
-    console.log(resolvedPathes);
     for (const idx in filesData) {
         await createFile(resolvedPathes[idx], filesData[idx]);
     }
 }
+async function getFile(fileId) {
+    const res = await prisma.file.findUnique({
+        where: {
+            id: fileId
+        },
+        select: {
+            id: true,
+            name: true,
+            resourceType: true,
+            public_id: true,
+            size: true,
+            createdAt: true
+        }
+    });
+    if (!res) throw CustomError(`File with id ${fileId} not found!!`, 404);
+    return res;
 
-export default { createFile, createFiles };
+}
+async function getPublicId(fileId) {
+    const res = await prisma.file.findUnique({
+        where: {
+            id: fileId
+        },
+        select: {
+            public_id: true
+        }
+    });
+    if (!res) throw CustomError(`File with id ${fileId} not found!!`, 404);
+    return res.public_id;
+}
+export default { createFile, createFiles, getFile, getPublicId };

@@ -1,6 +1,9 @@
 import express from 'express';
 import AuthRouter from './routes/AuthRouter.js';
 import UploadRouter from './routes/UploadRouter.js';
+import PreviewRouter from './routes/PreviewRouter.js';
+import FoldersRouter from './routes/FoldersRouter.js';
+import FilesRouter from './routes/FilesRouter.js';
 
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
@@ -20,6 +23,9 @@ app.get('/api/test', (req, res, next) => {
 
 app.use('/api/', AuthRouter);
 app.use('/api/', UploadRouter);
+app.use('/api/', PreviewRouter);
+app.use('/api/', FoldersRouter);
+app.use('/api/', FilesRouter);
 
 app.use((err, req, res, next) => {
     console.log(err);

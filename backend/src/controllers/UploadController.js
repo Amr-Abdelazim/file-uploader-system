@@ -8,46 +8,46 @@ cloudinary.config();
 
 async function upload(req, res, next) {
 
-    req.body.paths = Array.isArray(req.body.paths) ? req.body.paths : [req.body.paths];
-    if (!(req.body.paths.every(item => typeof item === "string")) || req.body.paths.length !== req.files.length)
-        return next(new CustomError("Invalid paths format", 400));
-    console.log("hi");
-    const uploadResults = [];
-    for (const file of req.files) {
-        if (file.size === 0) {
-            continue;
-        }
-        const result = cloudinary.uploader.upload(file.path, {
-            public_id: file.filename.split('.')[0],
-            resource_type: 'raw',
-            type: "authenticated",
-            access_mode: "authenticated",
-            sign_url: true,
-        }).then(result => {
-            fs.unlink(file.path, () => { });
-            result.originalname = file.originalname;
-            result.mimetype = file.mimetype;
-
-        });
-        uploadResults.push(result);
-
+  req.body.paths = Array.isArray(req.body.paths) ? req.body.paths : [req.body.paths];
+  if (!(req.body.paths.every(item => typeof item === "string")) || req.body.paths.length !== req.files.length)
+    return next(new CustomError("Invalid paths format", 400));
+  const uploadResults = [];
+  for (const file of req.files) {
+    if (file.size === 0) {
+      continue;
     }
+    uploadResults.push(cloudinary.uploader.upload(file.path, {
+      public_id: file.filename.split('.')[0],
+      resource_type: 'raw',
+      type: "authenticated",
+      access_mode: "authenticated",
+      sign_url: true,
+    }).then(result => {
+      fs.unlink(file.path, () => { });
+      result.originalname = file.originalname;
+      result.mimetype = file.mimetype;
+      return result;
 
-    const results = await Promise.all(uploadResults);
-    console.log(results);
-    const filesData = results.map(result => {
-        return {
-            name: result.originalname,
-            url: result.secure_url,
-            resourceType: result.resource_type,
-            mimetype: result.mimetype,
-            size: result.bytes,
-            ownerId: req.user.userId
-        }
-    });
-    await fileService.createFiles(req.params.folderId, filesData, req.body.paths);
+    }));
 
-    res.json("done");
+
+  }
+
+  const results = await Promise.all(uploadResults);
+
+  const filesData = results.map(result => {
+    return {
+      name: result.originalname,
+      public_id: result.public_id,
+      resourceType: result.resource_type,
+      mimetype: result.mimetype,
+      size: result.bytes,
+      ownerId: req.user.userId
+    }
+  });
+  await fileService.createFiles(req.params.folderId, filesData, req.body.paths);
+
+  res.json("done");
 
 
 }

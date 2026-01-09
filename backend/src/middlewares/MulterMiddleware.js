@@ -14,6 +14,7 @@ function uploadFiles(fieldName) {
             cp(null, path.join(__dirname, '..', '..', 'tempUploads'));
         },
         filename: (req, file, cp) => {
+            file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8');
             const ext = path.extname(file.originalname);
             const publicId = uuidv4();
             cp(null, publicId + ext);
