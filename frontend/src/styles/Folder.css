@@ -1,0 +1,56 @@
+/* Folder.css */
+
+/* Container for all folder items */
+.folderContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 16px;
+    width: 100%;
+    /* ensure it takes full width */
+    padding: 10px 0;
+}
+
+/* Each file/folder card */
+.objectContainer button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    width: 100%;
+}
+
+/* Hover effect for cards */
+.objectContainer button:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background-color: #f9f9f9;
+}
+
+/* File/Folder icon */
+.objectContainer svg {
+    font-size: 40px;
+    color: #555;
+}
+
+/* File/Folder name */
+.objectContainer p {
+    font-size: 14px;
+    text-align: center;
+    color: #333;
+    word-break: break-word;
+}
+
+/* Optional: truncate long names */
+.objectContainer p {
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

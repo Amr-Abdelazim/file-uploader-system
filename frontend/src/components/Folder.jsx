@@ -7,6 +7,7 @@ import FileIcon from '@mui/icons-material/InsertDriveFile';
 import { useAlert } from "../contexts/AlertContext";
 import { useNavigate } from "react-router-dom";
 import FileApi from "../apiController/FileApi";
+import '../styles/Folder.css';
 export function Folder({ folderId }) {
     const [folderData, setFolderData] = useState([]);
     const { showAlert } = useAlert();
@@ -46,13 +47,13 @@ export function Folder({ folderId }) {
             <div className="objectContainer" key={obj.id}>
                 {
                     obj.isFile ?
-                        <button onClick={() => selectFile(obj.id, obj.name)}>
+                        <button onClick={() => selectFile(obj.id, obj.name)} title={obj.name}>
                             <FileIcon />
                             <p>{obj.name}</p>
                         </button>
                         :
-                        <button onClick={() => selectFolder(obj.id)}>
-                            <FolderIcon />
+                        <button onClick={() => selectFolder(obj.id)} title={obj.name}>
+                            <FolderIcon style={{ color: 'gold' }} />
                             <p>{obj.name}</p>
                         </button>
                 }

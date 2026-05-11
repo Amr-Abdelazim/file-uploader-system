@@ -7,7 +7,7 @@ cloudinary.config();
 
 
 async function upload(req, res, next) {
-
+  console.log("uploading");
   req.body.paths = Array.isArray(req.body.paths) ? req.body.paths : [req.body.paths];
   if (!(req.body.paths.every(item => typeof item === "string")) || req.body.paths.length !== req.files.length)
     return next(new CustomError("Invalid paths format", 400));
@@ -45,6 +45,7 @@ async function upload(req, res, next) {
       ownerId: req.user.userId
     }
   });
+  console.log("upload done");
   await fileService.createFiles(req.params.folderId, filesData, req.body.paths);
 
   res.json("done");

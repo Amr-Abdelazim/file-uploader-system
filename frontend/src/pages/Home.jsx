@@ -5,6 +5,7 @@ import FoldersApi from "../apiController/FoldersApi";
 import { UploadButton } from "../components/UploadButton";
 import { LogoutButton } from "../components/LogoutButton";
 import { Folder } from "../components/Folder";
+import '../styles/Home.css';
 export function Home() {
     const [rootFolder, setRootFolder] = useState(undefined);
 
@@ -27,7 +28,10 @@ export function Home() {
                 <nav><UploadButton rootFolder={rootFolder} />
                     <LogoutButton />
                 </nav>
-                <Folder folderId={rootFolder} />
+                <div className="folderWrapper">
+                    <Folder folderId={rootFolder} />
+
+                </div>
 
 
             </div>

@@ -48,7 +48,8 @@ class FolderApi {
                 Authorization: 'Bearer ' + access_token
             }
         }).then(async (res) => await res.json());
-        return res;
+
+        return res.reverse();
     }
 }
 export default new FolderApi();

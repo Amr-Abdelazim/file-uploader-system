@@ -1,0 +1,74 @@
+.mainContainer {
+    max-width: 1200px;
+    margin: 0 auto;
+
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    min-height: 100vh;
+}
+
+
+.mainContainer nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+
+.mainContainer nav button {
+    padding: 8px 16px;
+    font-size: 14px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.mainContainer nav button:hover {
+    background-color: #e0e0e0;
+}
+
+
+.mainContainer>.folderWrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+
+.folderCard {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 16px;
+    width: 200px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.folderCard:hover {
+    transform: translateY(-4px);
+}
+
+
+.fullPageSpinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+
+.mainContainer p {
+    color: rgb(64, 12, 255);
+    font-weight: bold;
+    text-align: center;
+}

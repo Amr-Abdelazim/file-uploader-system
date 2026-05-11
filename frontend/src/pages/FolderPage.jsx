@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { FullPageSpinner } from "../components/FullPageSpinner";
 import FoldersApi from "../apiController/FoldersApi";
 import { FolderPath } from "../components/FolderPath";
+import '../styles/FolderPage.css';
 export function FolderPage() {
     const { folderId } = useParams();
     const [isValid, setIsValid] = useState(undefined);
@@ -28,8 +29,10 @@ export function FolderPage() {
                 <nav><UploadButton rootFolder={folderId} />
                     <LogoutButton />
                 </nav>
-                <FolderPath folderId={folderId} maxPathLength={2} />
-                <Folder folderId={folderId} />
+                <FolderPath folderId={folderId} maxPathLength={5} />
+                <div className="folderWrapper">
+                    <Folder folderId={folderId} />
+                </div>
             </div>
         </>
     )

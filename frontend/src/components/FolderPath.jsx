@@ -2,9 +2,12 @@
 import { useEffect, useState } from "react";
 import FoldersApi from "../apiController/FoldersApi";
 import { useAlert } from "../contexts/AlertContext";
+import '../styles/FolderPath.css';
+import { useNavigate } from "react-router-dom";
 export function FolderPath({ folderId, maxPathLength = 5 }) {
     const [folderPath, setFolderPath] = useState(null);
     const { showAlert } = useAlert();
+    const navigate = useNavigate();
     useEffect(() => {
         async function getFolderPath() {
             const res = await FoldersApi.getFolderPath(folderId, maxPathLength);
@@ -15,15 +18,18 @@ export function FolderPath({ folderId, maxPathLength = 5 }) {
         getFolderPath();
     }, [folderId, maxPathLength, showAlert]);
     if (!folderPath) return <p>...</p>;
+    function selectFolder(folderId) {
+        navigate('/folder/' + folderId);
+    }
     return (
         <>
-            <ul>
-                {
-                    folderPath.map(folder => {
-                        return <li key={folder.folderId} >{folder.name}</li>
-                    })
-                }
-            </ul>
+            <div className="folderPath">
+                <ul>
+                    {folderPath.map(folder => (
+                        <li key={folder.folderId} onClick={() => selectFolder(folder.folderId)}>{folder.name}</li>
+                    ))}
+                </ul>
+            </div>
         </>
     )
 }

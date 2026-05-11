@@ -1,0 +1,98 @@
+/* FolderPage.css */
+
+/* Main container for the page */
+.mainContainer {
+    max-width: 1200px;
+    margin: 0 auto;
+    /* center horizontally */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    min-height: 100vh;
+}
+
+/* Navbar styling */
+.mainContainer nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Buttons inside navbar */
+.mainContainer nav button {
+    padding: 8px 16px;
+    font-size: 14px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.mainContainer nav button:hover {
+    background-color: #e0e0e0;
+}
+
+/* FolderPath component styling */
+.folderPath {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+    color: #555;
+    padding: 8px 12px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.folderPath span {
+    cursor: pointer;
+}
+
+.folderPath span:hover {
+    text-decoration: underline;
+}
+
+/* Folder component wrapper */
+.mainContainer>.folderWrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+/* Individual folder card */
+.folderCard {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 16px;
+    width: 200px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.folderCard:hover {
+    transform: translateY(-4px);
+}
+
+/* Spinner centering */
+.fullPageSpinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+/* Error message */
+.mainContainer p {
+    color: rgb(35, 1, 1);
+    font-weight: bold;
+    text-align: center;
+}

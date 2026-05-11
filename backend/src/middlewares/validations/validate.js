@@ -9,8 +9,8 @@ function validate(validations) {
         if (!errors.isEmpty()) {
             const errorMessages = errors.array().map(err => err.msg);
             next(new CustomError(errorMessages, 400));
-        }
-        next();
+        } else
+            next();
     }
 }
 
