@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>File Uploader Backend API Documentation</title>
+    <style>
+        body {
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: #111827;
+            background: #f5f7fb;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 32px 24px 48px;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            margin: 0;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            margin-top: 40px;
+            margin-bottom: 16px;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            margin-top: 32px;
+            margin-bottom: 12px;
+        }
+
+        p {
+            line-height: 1.7;
+            margin: 0 0 16px;
+        }
+
+        .intro {
+            padding: 24px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+
+        .endpoint {
+            margin-bottom: 24px;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 14px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+
+        .endpoint h4 {
+            margin-bottom: 10px;
+        }
+
+        .method {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            font-weight: 700;
+            border-radius: 999px;
+            margin-right: 10px;
+            font-size: 0.9rem;
+            letter-spacing: 0.02em;
+        }
+
+        .method.GET {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .method.POST {
+            background: #d1fae5;
+            color: #166534;
+        }
+
+        .method.PUT {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .method.DELETE {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .path {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 0.95rem;
+            color: #0f172a;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 10px;
+        }
+
+        dl {
+            margin: 0;
+        }
+
+        dt {
+            font-weight: 700;
+            margin-top: 16px;
+        }
+
+        dd {
+            margin: 6px 0 0 0;
+            padding-left: 1rem;
+            color: #4b5563;
+        }
+
+        pre {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            padding: 16px;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+
+        code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            background: #f8fafc;
+            padding: 1px 4px;
+            border-radius: 4px;
+        }
+
+        .note {
+            background: #eef2ff;
+            border-left: 4px solid #6366f1;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin: 16px 0;
+            color: #1d4ed8;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        .table th,
+        .table td {
+            border: 1px solid #e5e7eb;
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        .table th {
+            background: #f8fafc;
+            color: #111827;
+        }
+
+        .table tbody tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        .small {
+            font-size: 0.95rem;
+            color: #6b7280;
+        }
+
+        .heroes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .hero {
+            background: #fff;
+            padding: 14px 18px;
+            border-radius: 14px;
+            border: 1px solid #e5e7eb;
+            flex: 1 1 240px;
+        }
+
+        .hero strong {
+            display: block;
+            margin-bottom: 6px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="intro">
+            <h1>File Uploader Backend API Documentation</h1>
+            <p>This document describes the backend API surface implemented to date for the file uploader system. It
+                covers authentication, upload session flow, folder management, file operations, preview access, and
+                permission checks.</p>
+            <div class="heroes">
+                <div class="hero"><strong>Base path</strong><span class="small">All routes are mounted under
+                        <code>/api</code>.</span></div>
+                <div class="hero"><strong>Authentication</strong><span class="small">Most endpoints require
+                        <code>Authorization: Bearer &lt;access_token&gt;</code>.</span></div>
+                <div class="hero"><strong>Permissions</strong><span class="small">Folder and file operations validate
+                        ownership, edit access, or explicit permissions.</span></div>
+            </div>
+        </header>
+
+        <section>
+            <h2>1. Authentication</h2>
+
+            <div class="endpoint">
+                <h4><span class="method POST">POST</span> <span class="path">/api/signup</span></h4>
+                <p>Create a new user account.</p>
+                <div class="section-title">Body</div>
+                <pre>{
+  "username": "string",
+  "email": "string",
+  "password": "string"
+}</pre>
+                <div class="section-title">Response</div>
+                <pre>{
+  "success": true,
+  "userId": "..."
+}</pre>
+            </div>
+
+            <div class="endpoint">
+                <h4><span class="method POST">POST</span> <span class="path">/api/login</span></h4>
+                <p>Authenticate and obtain access credentials.</p>
+                <div class="section-title">Body</div>
+                <pre>{
+  "email": "string",
+  "password": "string"
+}</pre>
+                <div class="section-title">Response</div>
+                <pre>{
+  "success": true,
+  "accessToken": "...",
+  "refreshToken": "..."
+}</pre>
+            </div>
+
+            <div class="endpoint">
+                <h4><span class="method POST">POST</span> <span class="path">/api/token</span></h4>
+                <p>Refresh an access token using a refresh token.</p>
+                <div class="section-title">Body</div>
+                <pre>{
+  "refreshToken": "string"
+}</pre>
+            </div>
+
+            <div class="endpoint">
+                <h4><span class="method POST">POST</span> <span class="path">/api/logout</span></h4>
+                <p>Invalidate the current refresh token and log out.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>2. Upload workflow</h2>
+
+            <div class="endpoint">
+                <h4><span class="method POST">POST</span> <span class="path">/api/upload/session</span></h4>
+                <p>Start a new chunked upload session for a file.</p>
+                <div class="note">Requires authenticated user and edit access to the target folder.</div>
+                <div class="section-title">Body</div>
+                <pre>{
+  "name": "string",
+  "size": number,
+  "totalChunks": number,
+  "folderId": "string",
+  "mimetype": "string",
+  "resourceType": "string (optional)"
+}</pre>
+                <div class="section-title">Response</div>
+                <pre>{
+  "success": true,
+  "fileId": "...",
+  "sessionId": "...",
+  "status": "uploading"
+}</pre>
+            </div>
+
+            <div class="endpoint">
+                <h4><span class="method POST">POST</span> <span class="path">/api/upload/chunk</span></h4>
+                <p>Upload a single chunk for an existing upload session.</p>
+                <div class="note">Uses multipart form-data. Requires authenticated user and session file access.</div>
+                <div class="section-title">Form fields</div>
+                <pre>{
+  sessionId: string,
+  fileId: string,
+  chunkIndex: number,
+  size: number,
+  chunkHash?: string
+}
+</pre>
+                <div class="section-title">File field</div>
+                <pre>{
+  file: binary chunk data
+}
+</pre>
+                <div class="section-title">Response</div>
+                <pre>{
+  "success": true,
+  "chunkIndex": number
+}</pre>
+            </div>
+
+            <div class="endpoint">
+                <h4><span class="method POST">POST</span> <span class="path">/api/upload/finalize</span></h4>
+                <p>Finalize an upload session and merge saved chunks into the final file.</p>
+                <div class="note">Requires authenticated user and access to the upload session file.</div>
+                <div class="section-title">Body</div>
+                <pre>{
+  "sessionId": "string"
+}</pre>
+                <div class="section-title">Response</div>
+                <pre>{
+  "success": true,
+  "fileId": "...",
+  "sessionId": "...",
+  "status": "done",
+  "mergedFilePath": "..."
+}</pre>
+            </div>
+
+            <div class="endpoint">
+                <h4><span class="method GET">GET</span> <span class="path">/api/upload/session/:sessionId/status</span>
+                </h4>
+                <p>Query the upload status for a session.</p>
+                <div class="note">Requires authenticated user and access to the session file.</div>
+                <div class="section-title">Response</div>
+                <pre>{
+  "success": true,
+  "status": "uploading|merging|done",
+  "totalChunks": number,
+  "uploadedChunks": [number, ...]
+}</pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>3. Folder management</h2>
+
+            <div class="endpoint">
+                <h4><span class="method POST">POST</span> <span class="path">/api/folder</span></h4>
+                <p>Create a new folder.</p>
+                <div class="note">Requires authenticated user. Parent folder must be editable by the user.</div>
+                <div class="section-title">Body</div>
+                <pre>{
+  "name": "string",
+  "parentId": "string (optional)"
+}</pre>
+                <div class="section-title">Response</div>
+                <pre>{
+  "success": true,
+  "folderId": "..."
+}</pre>
+            </div>
+
+            <div class="endpoint">
+                <h4><span class="method GET">GET</span> <span class="path">/api/folder/root</span></h4>
+                <p>Get the current users root folder.</p>
+            </div>
+
+            <div class="endpoint">
+                <h4><span class="method GET">GET</span> <span class="path">/api/folder/check/:folderId</span></h4>
+                <p>Verify access to a folder. Returns <code>200</code> if allowed.</p>
+            </div>
+
+            <div class="endpoint">
+                <h4><span class="method GET">GET</span> <span class="path">/api/folder/:folderId</span></h4>
+                <p>Get folder metadata and immediate child folders/files.</p>
+                <div class="section-title">Response</div>
+                <pre>{
+  "success": true,
+  "folder": {
+    "id": "...",
+    "name": "...",
+    "size": number,
+    "createdAt": "...",
+    "parentId": "...",
+    "visibility": "private|public|unlisted"
+  },
+  "children": {
+    "folders": [...],
+    "files": [...]
+  }
+}</pre>
+            </div>
+
+            <div class="endpoint">
+                <h4><span class="method PUT">PUT</span> <span class="path">/api/folder/:folderId</span></h4>
+                <p>Rename an existing folder.</p>
+                <div class="section-title">Body</div>
+                <pre>{
+  "name": "string"
+}</pre>
+                <div class="section-title">Response</div>
+                <pre>{
+  "success": true,
+  "folder": { ... }
+}</pre>
+            </div>
+
+            <div class="endpoint">
+                <h4><span class="method DELETE">DELETE</span> <span class="path">/api/folder/:folderId</span></h4>
+                <p>Delete a folder. The folder must be empty to delete.</p>
+            </div>
+
+            <div class="endpoint">
+                <h4><span class="method GET">GET</span> <span class="path">/api/folder/path/:folderId</span></h4>
+                <p>Get the folder path from the root to the specified folder.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>4. File management</h2>
+
+            <div class="endpoint">
+                <h4><span class="method GET">GET</span> <span class="path">/api/file/download/:fileId</span></h4>
+                <p>Download a completed file.</p>
+                <div class="note">Supports HTTP Range requests, ETag caching, and inline preview via query string.</div>
+                <div class="section-title">Query parameters</div>
+                <pre>inline=true or preview=true</pre>
+                <div class="section-title">Headers</div>
+                <pre>
+Authorization: Bearer &lt;token&gt;
+Range: bytes=0-1023
+If-None-Match: &lt;etag&gt;
+</pre>
+            </div>
+
+            <div class="endpoint">
+                <h4><span class="method GET">GET</span> <span class="path">/api/file/:fileId</span></h4>
+                <p>Get metadata for a file.</p>
+            </div>
+
+            <div class="endpoint">
+                <h4><span class="method PUT">PUT</span> <span class="path">/api/file/:fileId</span></h4>
+                <p>Rename a file.</p>
+                <div class="section-title">Body</div>
+                <pre>{
+  "name": "string"
+}</pre>
+            </div>
+
+            <div class="endpoint">
+                <h4><span class="method DELETE">DELETE</span> <span class="path">/api/file/:fileId</span></h4>
+                <p>Delete a file and remove its saved chunks plus merged file data.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>5. Preview</h2>
+
+            <div class="endpoint">
+                <h4><span class="method GET">GET</span> <span class="path">/api/preview/folder/:folderId</span></h4>
+                <p>Get a flattened preview of folder contents.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>6. Permission notes</h2>
+            <p>Current permission logic is implemented in middleware and validation layers:</p>
+            <ul>
+                <li>Folder creation requires <code>editor</code> access to the parent folder.</li>
+                <li>Upload session creation requires edit access to the target folder.</li>
+                <li>Upload chunk, finalize, and status endpoints require the session file to belong to the authenticated
+                    user.</li>
+                <li>File and folder operations validate ownership or explicit permissions via <code>userService</code>.
+                </li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>7. Error handling</h2>
+            <p>Errors are returned as JSON with an HTTP status code and an error message. Example:</p>
+            <pre>{
+  "error": "Invalid header format"
+}</pre>
+            <p>Validation failures generally return <code>400</code>. Unauthorized access returns <code>401</code> or
+                <code>403</code>.</p>
+        </section>
+
+        <section>
+            <h2>8. Implementation details</h2>
+            <p>The backend uses:</p>
+            <ul>
+                <li>Express 5</li>
+                <li>Prisma for database access</li>
+                <li>JWT for authentication</li>
+                <li>Busboy for multipart chunk uploads</li>
+            </ul>
+            <p>The current upload flow stores incoming chunk files in <code>Storage/saved/uploads/&lt;fileId&gt;/</code>
+                and merges them into <code>Storage/merged/</code> on finalize.</p>
+        </section>
+    </div>
+</body>
+
+</html>

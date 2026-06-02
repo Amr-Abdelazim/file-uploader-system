@@ -1,7 +1,9 @@
 import folderService from "../services/folderService.js";
 
 async function folderPreview(req, res, next) {
-    res.json(await folderService.folderPreview(req.params.folderId));
+    const ans = await folderService.folderPreview(req.params.folderId);
+    console.log(ans);
+    res.json(ans);
 }
 
 export default { folderPreview };

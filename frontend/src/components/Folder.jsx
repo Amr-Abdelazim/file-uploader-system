@@ -17,6 +17,7 @@ export function Folder({ folderId }) {
         async function getFolderPreview() {
             if (!folderId) return null;
             const res = await FoldersApi.getFolderPreview(folderId);
+            console.log(res);
             if (res.error) {
                 showAlert(res.error, 'error');
                 navigate('/', { replace: true });

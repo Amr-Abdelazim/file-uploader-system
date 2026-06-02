@@ -1,28 +1,81 @@
 import prisma from "../utils/prisma.js";
 
-async function isMyFolder(userId, folderId) {
-    const res = await prisma.folder.findUnique({
-        where: {
-            id: folderId
-        },
+
+
+async function hasAccess(userId, objectId, objectType, requiredRole = "viewer") {
+
+    const model = objectType === "file" ? prisma.file : prisma.folder;
+
+    const obj = await model.findUnique({
+        where: { id: objectId },
         select: {
-            ownerId: true
+            ownerId: true,
+            visibility: true
         }
     });
-    if (!res) return false;
-    return (res.ownerId === userId);
-}
-async function isMyFile(userId, fileId) {
-    const res = await prisma.file.findUnique({
+
+    if (!obj) return false;
+
+
+    if (obj.ownerId === userId) return true;
+
+
+    if (obj.visibility === "public" && requiredRole === "viewer") {
+        return true;
+    }
+
+
+    const permission = await prisma.permission.findUnique({
         where: {
-            id: fileId
+            userId_objectId_objectType: {
+                userId,
+                objectId,
+                objectType
+            }
         },
         select: {
-            ownerId: true
+            role: true
         }
     });
-    if (!res) return false;
-    return (res.ownerId === userId);
+
+    if (!permission) return false;
+
+
+    const roleHierarchy = {
+        viewer: 1,
+        editor: 2,
+        owner: 3
+    };
+
+    return roleHierarchy[permission.role] >= roleHierarchy[requiredRole];
 }
 
-export default { isMyFolder, isMyFile };
+
+
+async function isMyFolder(userId, folderId) {
+    return hasAccess(userId, folderId, "folder", "viewer");
+}
+
+async function isMyFile(userId, fileId) {
+    return hasAccess(userId, fileId, "file", "viewer");
+}
+
+
+
+async function canEditFile(userId, fileId) {
+    return hasAccess(userId, fileId, "file", "editor");
+}
+
+async function canEditFolder(userId, folderId) {
+    return hasAccess(userId, folderId, "folder", "editor");
+}
+
+
+
+export default {
+    isMyFolder,
+    isMyFile,
+    canEditFile,
+    canEditFolder,
+    hasAccess
+};

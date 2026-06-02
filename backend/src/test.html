@@ -1,82 +1,662 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
   <meta charset="UTF-8" />
-  <title>Upload Test with Token</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advanced Chunk Upload Tester</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .box {
+      border: 1px solid #ccc;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 6px;
+    }
+
+    input,
+    button {
+      margin: 5px 0;
+    }
+
+    button {
+      margin-right: 10px;
+    }
+
+    pre {
+      background: #111;
+      color: #0f0;
+      padding: 10px;
+      overflow: auto;
+      min-height: 200px;
+    }
+
+    progress {
+      width: 100%;
+      height: 30px;
+    }
+  </style>
+
 </head>
 
 <body>
-  <h2>Upload Test</h2>
 
-  <label>Access Token:</label>
-  <input type="text" id="tokenInput" placeholder="Paste your access token here" style="width: 400px" /><br /><br />
+  <h1>Advanced Chunk Upload Tester</h1>
 
-  <!-- Upload Files -->
-  <form id="fileForm" enctype="multipart/form-data">
-    <label>Select Files:</label>
-    <input type="file" id="fileInput" name="files" multiple /><br /><br />
-    <button type="submit">Upload Files</button>
-  </form>
+  <div class="box">
+    <h2>Config</h2>
 
-  <br />
-  <hr />
-  <br />
+    ```
+    <input id="token" placeholder="Access Token" style="width:100%" />
 
-  <!-- Upload Folders -->
-  <form id="folderForm" enctype="multipart/form-data">
-    <label>Select Folder:</label>
-    <input type="file" id="folderInput" name="files" webkitdirectory directory multiple /><br /><br />
-    <button type="submit">Upload Folder</button>
-  </form>
+    <br>
 
-  <pre id="output"></pre>
+    <input id="folderId" value="21030c27-2de9-41f7-880b-5ad8ce82c162" placeholder="Folder ID" style="width:100%" />
+    ```
+
+  </div>
+
+  <div class="box">
+    <h2>Select File</h2>
+
+    ```
+    <input type="file" id="fileInput" />
+
+    <br><br>
+
+    <label>Chunk Size (MB)</label>
+    <br>
+
+    <input id="chunkSize" type="number" value="1" min="1" />
+
+    <br><br>
+
+    <button onclick="startUpload()">
+      Start Upload
+    </button>
+
+    <button onclick="pauseUpload()">
+      Pause
+    </button>
+
+    <button onclick="resumeUpload()">
+      Resume
+    </button>
+
+    <button onclick="restoreSession()">
+      Restore Session
+    </button>
+    ```
+
+  </div>
+
+  <div class="box">
+    <h2>Testing Tools</h2>
+
+    ```
+    <button onclick="getStatus()">
+      Get Status
+    </button>
+
+    <button onclick="failAfter5Chunks()">
+      Fail After 5 Chunks
+    </button>
+
+    <button onclick="reuploadChunk(0)">
+      Reupload Chunk 0
+    </button>
+    ```
+
+  </div>
+
+  <div class="box">
+    <h2>Progress</h2>
+
+    ```
+    <progress id="progress" value="0" max="100">
+    </progress>
+
+    <div id="progressText">
+      0%
+    </div>
+    ```
+
+  </div>
+
+  <div class="box">
+    <h2>Session Info</h2>
+
+    ```
+    <div id="sessionInfo">
+      No active session
+    </div>
+    ```
+
+  </div>
+
+  <div class="box">
+    <h2>Logs</h2>
+
+    ```
+    <pre id="logs"></pre>
+    ```
+
+  </div>
 
   <script>
-    async function upload(input) {
-      const formData = new FormData();
-      for (const file of input.files) {
-        //console.log("hi");
-        console.log(file.webkitRelativePath);
-        formData.append("files", file);
-        formData.append("paths[]", file.webkitRelativePath || file.name);
-      }
 
-      const token = document.getElementById("tokenInput").value.trim();
+    const API = "http://localhost:3000/api";
 
-      try {
-        const res = await fetch(
-          "http://localhost:3000/api/upload/328317cd-0613-43f8-a01c-7b97d230bf65",
-          {
-            // change to your API endpoint
-            method: "POST",
-            headers: {
-              Authorization: "Bearer " + token,
-            },
-            body: formData,
-          }
-        );
-        const text = await res.text();
-        document.getElementById("output").textContent = text;
-      } catch (err) {
-        document.getElementById("output").textContent = "Error: " + err;
-      }
+    let currentSessionId = null;
+    let currentFileId = null;
+
+    let selectedFile = null;
+
+    let totalChunks = 0;
+    let currentChunkSize = 0;
+
+    let paused = false;
+    let failAfter = null;
+
+    function log(message) {
+
+      const logs =
+        document.getElementById("logs");
+
+      logs.textContent +=
+        `[${new Date().toLocaleTimeString()}] ${message}\n`;
+
+      logs.scrollTop =
+        logs.scrollHeight;
     }
 
-    document
-      .getElementById("fileForm")
-      .addEventListener("submit", async (e) => {
-        e.preventDefault();
-        await upload(document.getElementById("fileInput"));
-      });
+    function getHeaders() {
 
-    document
-      .getElementById("folderForm")
-      .addEventListener("submit", async (e) => {
-        e.preventDefault();
-        await upload(document.getElementById("folderInput"));
-      });
+      return {
+        Authorization:
+          `Bearer ${document.getElementById("token").value}`
+      };
+    }
+
+    function saveSession() {
+
+      localStorage.setItem(
+        "uploadSession",
+        JSON.stringify({
+          sessionId: currentSessionId,
+          fileId: currentFileId
+        })
+      );
+    }
+
+    function restoreSession() {
+
+      const raw =
+        localStorage.getItem(
+          "uploadSession"
+        );
+
+      if (!raw) {
+        alert("No stored session");
+        return;
+      }
+
+      const data =
+        JSON.parse(raw);
+
+      currentSessionId =
+        data.sessionId;
+
+      currentFileId =
+        data.fileId;
+
+      updateSessionInfo();
+
+      log(
+        `Session restored: ${currentSessionId}`
+      );
+    }
+
+    function updateSessionInfo() {
+
+      document.getElementById(
+        "sessionInfo"
+      ).innerHTML = `
+        <p><b>Session:</b> ${currentSessionId}</p>
+        <p><b>File:</b> ${currentFileId}</p>
+      `;
+    }
+
+    function updateProgress(done) {
+
+      const percent =
+        (done / totalChunks) * 100;
+
+      document.getElementById(
+        "progress"
+      ).value = percent;
+
+      document.getElementById(
+        "progressText"
+      ).innerText =
+        percent.toFixed(1) + "%";
+    }
+
+    function pauseUpload() {
+
+      paused = true;
+
+      log(
+        "Upload paused"
+      );
+    }
+
+    function failAfter5Chunks() {
+
+      failAfter = 5;
+
+      log(
+        "Will simulate failure after chunk 5"
+      );
+    }
+
+    async function startUpload() {
+
+      selectedFile =
+        document.getElementById(
+          "fileInput"
+        ).files[0];
+
+      if (!selectedFile) {
+
+        alert(
+          "Select a file first"
+        );
+
+        return;
+      }
+
+      const chunkSizeMB =
+        Number(
+          document.getElementById(
+            "chunkSize"
+          ).value
+        );
+
+      currentChunkSize =
+        chunkSizeMB *
+        1024 *
+        1024;
+
+      totalChunks =
+        Math.ceil(
+          selectedFile.size /
+          currentChunkSize
+        );
+
+      log(
+        "Creating upload session..."
+      );
+
+      const response =
+        await fetch(
+          `${API}/upload/session`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+              ...getHeaders()
+            },
+            body: JSON.stringify({
+              name:
+                selectedFile.name,
+              size:
+                selectedFile.size,
+              mimetype:
+                selectedFile.type,
+              resourceType:
+                "file",
+              folderId:
+                document.getElementById(
+                  "folderId"
+                ).value,
+              totalChunks
+            })
+          }
+        );
+
+      const data =
+        await response.json();
+
+      console.log(data);
+
+      currentSessionId =
+        data.sessionId;
+
+      currentFileId =
+        data.fileId;
+
+      saveSession();
+
+      updateSessionInfo();
+
+      log(
+        `Session created`
+      );
+
+      log(
+        `Total chunks: ${totalChunks}`
+      );
+
+      paused = false;
+
+      await uploadMissingChunks([]);
+    }
+
+    async function uploadMissingChunks(
+      uploadedChunks = []
+    ) {
+
+      const uploadedSet =
+        new Set(
+          uploadedChunks
+        );
+
+      let completed =
+        uploadedSet.size;
+
+      updateProgress(
+        completed
+      );
+
+      for (
+        let i = 0;
+        i < totalChunks;
+        i++
+      ) {
+
+        if (paused) {
+
+          log(
+            `Stopped at chunk ${i}`
+          );
+
+          return;
+        }
+
+        if (
+          failAfter !== null &&
+          i >= failAfter
+        ) {
+
+          failAfter = null;
+
+          throw new Error(
+            "Simulated network failure"
+          );
+        }
+
+        if (
+          uploadedSet.has(i)
+        ) {
+
+          log(
+            `Skipping chunk ${i}`
+          );
+
+          continue;
+        }
+
+        const start =
+          i *
+          currentChunkSize;
+
+        const end =
+          Math.min(
+            start +
+            currentChunkSize,
+            selectedFile.size
+          );
+
+        const blob =
+          selectedFile.slice(
+            start,
+            end
+          );
+
+        const formData =
+          new FormData();
+
+        formData.append(
+          "sessionId",
+          currentSessionId
+        );
+
+        formData.append(
+          "fileId",
+          currentFileId
+        );
+
+        formData.append(
+          "chunkIndex",
+          i
+        );
+        formData.append(
+          "size",
+          blob.size
+        );
+        formData.append(
+          "chunk",
+          blob
+        );
+
+        log(
+          `Uploading chunk ${i}`
+        );
+
+        const response =
+          await fetch(
+            `${API}/upload/chunk`,
+            {
+              method: "POST",
+              headers:
+                getHeaders(),
+              body:
+                formData
+            }
+          );
+
+        const data =
+          await response.json();
+
+        console.log(data);
+
+        completed++;
+
+        updateProgress(
+          completed
+        );
+
+        log(
+          `Chunk ${i} uploaded`
+        );
+      }
+
+      log(
+        "Upload completed"
+      );
+    }
+
+    async function resumeUpload() {
+
+      if (
+        !currentSessionId
+      ) {
+
+        alert(
+          "No session loaded"
+        );
+
+        return;
+      }
+
+      paused = false;
+
+      log(
+        "Fetching upload status..."
+      );
+
+      const response =
+        await fetch(
+          `${API}/upload/session/${currentSessionId}/status`,
+          {
+            headers:
+              getHeaders()
+          }
+        );
+
+      const data =
+        await response.json();
+
+      console.log(data);
+
+      log(
+        `Uploaded chunks: ${data.uploadedChunks.length}`
+      );
+
+      await uploadMissingChunks(
+        data.uploadedChunks
+      );
+    }
+
+    async function getStatus() {
+
+      if (
+        !currentSessionId
+      ) {
+
+        alert(
+          "No active session"
+        );
+
+        return;
+      }
+
+      const response =
+        await fetch(
+          `${API}/upload/session/${currentSessionId}/status`,
+          {
+            headers:
+              getHeaders()
+          }
+        );
+
+      const data =
+        await response.json();
+
+      console.log(data);
+
+      log(
+        JSON.stringify(
+          data,
+          null,
+          2
+        )
+      );
+    }
+
+    async function reuploadChunk(
+      index
+    ) {
+
+      if (
+        !selectedFile ||
+        !currentSessionId
+      ) {
+
+        alert(
+          "Upload a file first"
+        );
+
+        return;
+      }
+
+      const start =
+        index *
+        currentChunkSize;
+
+      const end =
+        Math.min(
+          start +
+          currentChunkSize,
+          selectedFile.size
+        );
+
+      const blob =
+        selectedFile.slice(
+          start,
+          end
+        );
+
+      const formData =
+        new FormData();
+
+      formData.append(
+        "sessionId",
+        currentSessionId
+      );
+
+      formData.append(
+        "fileId",
+        currentFileId
+      );
+
+      formData.append(
+        "chunkIndex",
+        index
+      );
+      formData.append(
+        "size",
+        blob.size
+      );
+      formData.append(
+        "chunk",
+        blob
+      );
+
+      const response =
+        await fetch(
+          `${API}/upload/chunk`,
+          {
+            method: "POST",
+            headers:
+              getHeaders(),
+            body:
+              formData
+          }
+        );
+
+      const data =
+        await response.json();
+
+      console.log(data);
+
+      log(
+        `Chunk ${index} reuploaded`
+      );
+    }
+
   </script>
+
 </body>
 
 </html>

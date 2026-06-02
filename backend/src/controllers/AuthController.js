@@ -29,9 +29,9 @@ async function login(req, res, next) {
 }
 async function refreshToken(req, res, next) {
     if (!req.cookies)
-        next(new CustomError("Cookies missing", 400));
+        return next(new CustomError("Cookies missing", 400));
     if (!req.cookies.refresh_token)
-        next(new CustomError("Token missing", 400));
+        return next(new CustomError("Token missing", 400));
     const user = await AuthService.verifyRefreshToken(req.cookies.refresh_token);
 
     const access_token = jwt.sign(
@@ -43,9 +43,9 @@ async function refreshToken(req, res, next) {
 }
 async function logout(req, res, next) {
     if (!req.cookies)
-        next(new CustomError("Cookies missing", 400));
+        return next(new CustomError("Cookies missing", 400));
     if (!req.cookies.refresh_token)
-        next(new CustomError("Token missing", 400));
+        return next(new CustomError("Token missing", 400));
     await AuthService.logout(req.cookies.refresh_token);
     res.json({ message: "logout success" });
 }

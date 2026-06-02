@@ -11,4 +11,22 @@ router.get('/file/download/:fileId',
     asyncHandler(FileController.downloadFile)
 );
 
+router.get('/file/:fileId',
+    AuthMiddleware.verifyToken,
+    FileValidation.validateFile(),
+    asyncHandler(FileController.getFileInfo)
+);
+
+router.put('/file/:fileId',
+    AuthMiddleware.verifyToken,
+    FileValidation.validateFile(false),
+    asyncHandler(FileController.renameFile)
+);
+
+router.delete('/file/:fileId',
+    AuthMiddleware.verifyToken,
+    FileValidation.validateFile(false),
+    asyncHandler(FileController.deleteFile)
+);
+
 export default router;

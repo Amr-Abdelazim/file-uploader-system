@@ -13,9 +13,10 @@ class FolderApi {
                 Authorization: "Bearer " + access_token,
             }
         }).then(async (res) => await res.json());
-        if (!res.folderId) return null;
-        this.root = res.folderId;
-        return res.folderId;
+        console.log(res);
+        if (!res.id) return null;
+        this.root = res.id;
+        return res.id;
     }
     async getFolderPreview(folderId) {
         const access_token = await AuthApi.getAccessToken();
@@ -26,6 +27,7 @@ class FolderApi {
             }
 
         }).then(async (res) => res.json());
+
         return res;
     }
     async checkFolder(folderId) {
