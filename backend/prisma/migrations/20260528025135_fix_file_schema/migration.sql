@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "File" ADD COLUMN     "path" TEXT,
+ALTER COLUMN "size" SET DATA TYPE BIGINT;

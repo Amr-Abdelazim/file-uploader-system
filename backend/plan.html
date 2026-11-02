@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>File Uploader System — Backend Plan</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d2991d;
+    --red: #f85149;
+    --purple: #a371f7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.3rem; margin: 2rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+  .subtitle { color: var(--muted); margin-bottom: 2rem; }
+  .stats { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1.25rem; text-align: center; min-width: 80px; }
+  .stat .num { font-size: 1.5rem; font-weight: 700; }
+  .stat .label { font-size: 0.75rem; color: var(--muted); }
+  .phase { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 1.5rem; overflow: hidden; }
+  .phase-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.75rem 1rem; cursor: pointer; user-select: none;
+    transition: background 0.15s;
+  }
+  .phase-header:hover { background: #1c2129; }
+  .phase-header h3 { font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+  .phase-badge {
+    font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .badge-small { background: #1a3a2a; color: var(--green); }
+  .badge-medium { background: #3d2e00; color: var(--yellow); }
+  .badge-blocker { background: #3d1a1a; color: var(--red); }
+  .phase-arrow { color: var(--muted); transition: transform 0.2s; font-size: 0.8rem; }
+  .phase.open .phase-arrow { transform: rotate(90deg); }
+  .phase-body { display: none; padding: 0 1rem 1rem; }
+  .phase.open .phase-body { display: block; }
+  .task-list { list-style: none; }
+  .task-item {
+    display: flex; align-items: flex-start; gap: 0.5rem;
+    padding: 0.4rem 0; border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: background 0.1s;
+  }
+  .task-item:last-child { border-bottom: none; }
+  .task-item:hover { background: #1c2129; margin: 0 -0.5rem; padding: 0.4rem 0.5rem; border-radius: 4px; }
+  .task-check {
+    width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 4px;
+    flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; font-size: 0.65rem;
+  }
+  .task-item.done .task-check { background: var(--green); border-color: var(--green); color: #fff; }
+  .task-item.done .task-label { text-decoration: line-through; color: var(--muted); }
+  .task-label { flex: 1; }
+  .task-tag {
+    font-size: 0.65rem; padding: 0.1rem 0.4rem; border-radius: 8px;
+    background: var(--border); color: var(--muted); flex-shrink: 0;
+  }
+  .progress-bar {
+    height: 4px; background: var(--border); border-radius: 2px; margin-top: 0.5rem; overflow: hidden;
+  }
+  .progress-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.3s; }
+  .reset-btn {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    padding: 0.4rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
+    margin-top: 1rem; transition: background 0.15s;
+  }
+  .reset-btn:hover { background: #1c2129; }
+  .footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+
+<h1>File Uploader System</h1>
+<p class="subtitle">Backend completion plan — 9 phases, 66 tasks</p>
+
+<div class="stats">
+  <div class="stat"><div class="num" id="totalDone">0</div><div class="label">Done</div></div>
+  <div class="stat"><div class="num" id="totalRemaining">66</div><div class="label">Remaining</div></div>
+  <div class="stat"><div class="num" id="totalPercent">0%</div><div class="label">Complete</div></div>
+</div>
+
+<div id="phases"></div>
+
+<button class="reset-btn" onclick="resetAll()">Reset All Progress</button>
+
+<div class="footer">Progress saved in localStorage. Open this file in any browser.</div>
+
+<script>
+const phases = [
+  {
+    title: "Phase 1 — Fix Existing Bugs",
+    badge: "blocker",
+    badgeText: "blocker",
+    tasks: [
+      "UploadService.js line 30: throw CustomError(...) → throw new CustomError(...)",
+      "PermissionMiddleware.js line 15: add await to isMyFile()",
+      "fileService.js: remove public_id from getFile() select and getPublicId() method",
+      "fileService.js line 29: resolvePaths() missing 3rd arg ownerId",
+      "package.json: add start and dev scripts",
+      "package.json: remove cloudinary and multer if unused",
+      "MulterMiddleware.js: delete if dead code",
+      "FileController.js: rewrite downloadFile for local disk"
+    ]
+  },
+  {
+    title: "Phase 2 — Schema Changes for Local Storage",
+    badge: "blocker",
+    badgeText: "blocker",
+    tasks: [
+      "Add path field to File model in schema.prisma",
+      "Add publicId field to File model (optional)",
+      "Run migration: npx prisma migrate dev --name add_file_path",
+      "Regenerate Prisma client: npx prisma generate"
+    ]
+  },
+  {
+    title: "Phase 3 — Chunk Merge Pipeline",
+    badge: "medium",
+    badgeText: "medium",
+    tasks: [
+      "StorageService.mergeChunks(fileId) — read chunks in order, pipe to final file",
+      "StorageService.cleanupChunks(fileId) — delete chunk directory after merge",
+      "UploadService.completeSession(sessionId) — status → done, file.isComplete = true",
+      "UploadService.failSession(sessionId) — status → failed",
+      "POST /api/upload/merge — route + controller + validation",
+      "GET /api/upload/session/:sessionId — check session status",
+      "GET /api/upload/session/pending — list incomplete sessions"
+    ]
+  },
+  {
+    title: "Phase 4 — Folder CRUD",
+    badge: "medium",
+    badgeText: "medium",
+    tasks: [
+      "POST /api/folder — create folder (service exists: folderService.createFolder)",
+      "POST /api/folder — controller",
+      "POST /api/folder — validation (FolderValidation.validateCreate)",
+      "POST /api/folder — route + AuthMiddleware",
+      "PUT /api/folder/:folderId — rename: folderService.renameFolder()",
+      "PUT /api/folder/:folderId — controller",
+      "PUT /api/folder/:folderId — validation + route + auth + permission",
+      "DELETE /api/folder/:folderId — folderService.deleteFolder() recursive",
+      "DELETE /api/folder/:folderId — controller + validation + route + auth + permission"
+    ]
+  },
+  {
+    title: "Phase 5 — File Operations",
+    badge: "medium",
+    badgeText: "medium",
+    tasks: [
+      "DELETE /api/file/:fileId — fileService.deleteFile() (DB + disk + size update)",
+      "DELETE /api/file/:fileId — controller",
+      "DELETE /api/file/:fileId — validation + route + auth + permission",
+      "PUT /api/file/:fileId — rename: fileService.renameFile()",
+      "PUT /api/file/:fileId — controller + validation + route + auth + permission",
+      "GET /api/file/info/:fileId — file metadata (use existing getFile)",
+      "GET /api/file/info/:fileId — controller + validation + route + auth"
+    ]
+  },
+  {
+    title: "Phase 6 — File Download (Local Storage)",
+    badge: "small",
+    badgeText: "small",
+    tasks: [
+      "fileService.getFilePath(fileId) — return disk path",
+      "Rewrite FileController.downloadFile — fs.createReadStream + res.pipe",
+      "Add Content-Length header from file stat",
+      "Handle range requests (optional, good for video)"
+    ]
+  },
+  {
+    title: "Phase 7 — Sharing & Permissions",
+    badge: "medium",
+    badgeText: "medium",
+    tasks: [
+      "POST /api/share — shareService.grantAccess()",
+      "POST /api/share — controller + validation + route + auth + owner check",
+      "DELETE /api/share — shareService.revokeAccess()",
+      "DELETE /api/share — controller + validation + route + auth + owner check",
+      "GET /api/share/:objectId — shareService.listShares()",
+      "GET /api/share/:objectId — controller + route + auth",
+      "PUT /api/visibility/:objectId — shareService.setVisibility()",
+      "PUT /api/visibility/:objectId — controller + validation + route + auth + owner check"
+    ]
+  },
+  {
+    title: "Phase 8 — Public Access (No Auth)",
+    badge: "small",
+    badgeText: "small",
+    tasks: [
+      "GET /api/public/file/:fileId — middleware: check visibility public/unlisted",
+      "GET /api/public/file/:fileId — controller: stream from disk",
+      "GET /api/public/file/:fileId — route (no AuthMiddleware)",
+      "GET /api/public/folder/:folderId — middleware: check visibility",
+      "GET /api/public/folder/:folderId — controller: return children",
+      "GET /api/public/folder/:folderId — route (no AuthMiddleware)"
+    ]
+  },
+  {
+    title: "Phase 9 — Polish",
+    badge: "small",
+    badgeText: "small",
+    tasks: [
+      "Improve global error handler in index.js",
+      "Add CORS middleware",
+      "Add rate limiting on auth routes",
+      "Enforce file size limits in chunk upload validation",
+      ".gitignore: add Storage/ and tempUploads/",
+      "Remove src/test.html and /api/test route",
+      "Remove testPush.txt from repo root"
+    ]
+  }
+];
+
+const STORAGE_KEY = 'file-uploader-plan';
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+  catch { return {}; }
+}
+
+function saveState(state) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function toggleTask(phaseIdx, taskIdx) {
+  const state = loadState();
+  const key = `${phaseIdx}-${taskIdx}`;
+  state[key] = !state[key];
+  saveState(state);
+  render();
+}
+
+function resetAll() {
+  localStorage.removeItem(STORAGE_KEY);
+  render();
+}
+
+function render() {
+  const state = loadState();
+  const container = document.getElementById('phases');
+  let totalDone = 0;
+  let totalTasks = 0;
+
+  container.innerHTML = phases.map((phase, pi) => {
+    let phaseDone = 0;
+    const tasksHtml = phase.tasks.map((task, ti) => {
+      totalTasks++;
+      const key = `${pi}-${ti}`;
+      const done = !!state[key];
+      if (done) { totalDone++; phaseDone++; }
+      return `<li class="task-item${done ? ' done' : ''}" onclick="toggleTask(${pi},${ti})">
+        <span class="task-check">${done ? '✓' : ''}</span>
+        <span class="task-label">${task}</span>
+      </li>`;
+    }).join('');
+
+    const pct = phase.tasks.length ? Math.round((phaseDone / phase.tasks.length) * 100) : 0;
+
+    return `<div class="phase${phaseDone === phase.tasks.length ? ' open' : ''}" data-phase="${pi}">
+      <div class="phase-header" onclick="this.parentElement.classList.toggle('open')">
+        <h3>
+          <span class="phase-arrow">▶</span>
+          ${phase.title}
+          <span class="phase-badge badge-${phase.badge}">${phase.badgeText}</span>
+          <span style="font-size:0.75rem;color:var(--muted)">${phaseDone}/${phase.tasks.length}</span>
+        </h3>
+      </div>
+      <div class="phase-body">
+        <ul class="task-list">${tasksHtml}</ul>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('totalDone').textContent = totalDone;
+  document.getElementById('totalRemaining').textContent = totalTasks - totalDone;
+  document.getElementById('totalPercent').textContent = totalTasks ? Math.round((totalDone / totalTasks) * 100) + '%' : '0%';
+}
+
+render();
+</script>
+
+</body>
+</html>

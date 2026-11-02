@@ -26,49 +26,60 @@ datasource db {
  * // type in [private , shared, public]
  */
 
+/**
+ * =========================
+ * ENUMS
+ * =========================
+ */
+
+enum ObjectType {
+  file
+  folder
+}
+
+enum SessionStatus {
+  uploading
+  merging
+  done
+  failed
+}
+
+enum PermissionRole {
+  owner
+  editor
+  viewer
+}
+
+enum Visibility {
+  private
+  public
+  unlisted
+}
+
+/**
+ * =========================
+ * USER
+ * =========================
+ */
+
 model User {
-  id             String          @id @default(uuid())
-  username       String          @unique
-  email          String          @unique
+  id             String   @id @default(uuid())
+  username       String   @unique
+  email          String   @unique
   hashedPassword String
-  createdAt      DateTime        @default(now())
-  RefreshTokens  RefreshTokens[]
-  Shared         Shared[]
-  Folders        Folder[]
-  Files          File[]
-  root           root?
+  createdAt      DateTime @default(now())
+
+  RefreshTokens RefreshTokens[]
+  Folders       Folder[]
+  Files         File[]
+  permissions   Permission[]
 }
 
-model Folder {
-  id        String     @id @default(uuid())
-  name      String
-  size      Int        @default(0)
-  ownerId   String
-  createdAt DateTime   @default(now())
-  User      User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  childs    Children[]
-}
-
-model File {
-  id           String   @id @default(uuid())
-  name         String
-  public_id    String
-  resourceType String
-  mimetype     String
-  size         Int      @default(0)
-  createdAt    DateTime @default(now())
-  ownerId      String
-  User         User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-}
-
-model Children {
-  folderId String
-  objectId String
-  isFile   Boolean // is objectId is file?
-  Folder   Folder  @relation(fields: [folderId], references: [id], onDelete: Cascade)
-
-  @@id([folderId, objectId])
-}
+/**
+ * =========================
+ * REFRESH TOKENS
+ * =========================
+ */
 
 model RefreshTokens {
   id                 String   @id @default(uuid())
@@ -77,36 +88,131 @@ model RefreshTokens {
   hashedRefreshToken String   @unique
   expiresAt          DateTime
   createdAt          DateTime @default(now())
-  User               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([tokenUuid, userId])
 }
 
-model Shared {
-  objectId String
-  userId   String
-  User     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+/**
+ * =========================
+ * FOLDER (TREE STRUCTURE)
+ * =========================
+ */
 
-  @@id([objectId, userId])
-  @@index([objectId, userId])
+model Folder {
+  id         String     @id @default(uuid())
+  parentId   String?
+  ownerId    String
+  name       String
+  size       BigInt     @default(0)
+  visibility Visibility @default(private)
+  createdAt  DateTime   @default(now())
+
+  User User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  parent   Folder?  @relation("FolderTree", fields: [parentId], references: [id])
+  children Folder[] @relation("FolderTree")
+
+  files File[]
+
+  @@unique([ownerId, parentId, name])
 }
 
-enum PermissionType {
-  private
-  shared
-  public
+/**
+ * =========================
+ * FILE
+ * =========================
+ */
+
+model File {
+  id           String  @id @default(uuid())
+  name         String
+  resourceType String?
+  mimetype     String
+  size         BigInt  @default(0)
+  path         String?
+
+  folderId String
+  ownerId  String
+
+  totalChunks    Int     @default(0)
+  uploadedChunks Int     @default(0)
+  isComplete     Boolean @default(false)
+
+  hash       String?
+  visibility Visibility @default(private)
+
+  createdAt DateTime @default(now())
+
+  User   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  Folder Folder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+
+  chunks         ChunkFile[]
+  uploadSessions UploadSession[]
 }
+
+/**
+ * =========================
+ * CHUNKS
+ * =========================
+ */
+
+model ChunkFile {
+  id String @id @default(uuid())
+
+  fileId String
+  file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  index Int
+  size  Int
+  path  String
+
+  hash       String?
+  uploaded   Boolean   @default(false)
+  attempts   Int       @default(0)
+  uploadedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@unique([fileId, index])
+}
+
+/**
+ * =========================
+ * UPLOAD SESSION
+ * =========================
+ */
+
+model UploadSession {
+  id String @id @default(uuid())
+
+  fileId String @unique
+  file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  status    SessionStatus @default(uploading) // uploading | merging | done | failed
+  createdAt DateTime      @default(now())
+}
+
+/**
+ * =========================
+ * PERMISSION SYSTEM
+ * =========================
+ */
 
 model Permission {
-  objectId String         @unique
-  type     PermissionType
-  nested   Boolean
-}
+  id String @id @default(uuid())
 
-// denormalized tables
+  userId String
 
-model root {
-  folderId String @id
-  userId   String @unique
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  objectId   String
+  objectType ObjectType
+
+  role PermissionRole
+
+  createdAt DateTime @default(now())
+
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, objectId, objectType])
+  @@index([objectId, objectType])
 }
