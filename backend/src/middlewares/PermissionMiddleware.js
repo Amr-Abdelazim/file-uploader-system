@@ -15,7 +15,7 @@ async function sessionAccess(req, res, next) {
     if (!sessionId) sessionId = req.body.sessionId
     if (!sessionId) throw new CustomError("sessionId required", 400);
     const session = await UploadService.getUploadSession(sessionId);
-    const ok = await userService.isMyFile(req.user.userId, session.fileId);
+    const ok = await userService.canEditFile(req.user.userId, session.fileId);
     if (!ok) {
         return res.status(403).json({ message: "Permission denied" });
     }

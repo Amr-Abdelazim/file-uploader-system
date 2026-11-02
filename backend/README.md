@@ -32,10 +32,27 @@ This backend is implemented with:
 - Rename files with `PUT /api/file/:fileId`
 - Delete files with `DELETE /api/file/:fileId`
 
+### ✅ Permissions and sharing
+- Assign share roles with `POST /api/permission`
+- Revoke share access with `DELETE /api/permission`
+- List shared users and roles with `GET /api/permission/:objectType/:objectId`
+- Supports `viewer`, `editor`, and `owner` roles for both `file` and `folder`
+- Folder permission grants can cascade to files stored inside a shared folder
+- Upload session access now requires editor-level access to the target file
+- Public files and folders grant viewer access without a permission row
+
 ### ✅ Permissions-aware validation
 - Folder and file endpoints validate access via `userService`
 - Folder creation and upload session start require edit permissions on folders
-- File and upload-session access validate user ownership or explicit permissions
+- File and upload-session access validate ownership or explicit permissions
+
+### ✅ UI-ready integration
+- Authentication with `POST /api/signup`, `POST /api/login`, `POST /api/token`, and `POST /api/logout`
+- Use `Authorization: Bearer <token>` for all protected routes
+- File upload flow: create session → upload chunks → finalize
+- File download flow supports `Range` headers and inline preview
+- Folder and file metadata routes expose structured data for UI listing
+- Permission APIs support sharing by `targetUserId` or `targetUserEmail`
 
 ### ✅ Preview endpoint
 - Flattened folder preview available at `GET /api/preview/folder/:folderId`
@@ -93,12 +110,13 @@ A full HTML API reference is available at:
 
 ## What comes next
 
-Future work will include:
-- full permission and sharing controls for files and folders
+Future enhancements will include:
 - folder/file listing with pagination and search
+- richer UI search and filtering support
 - retry and cleanup strategies for interrupted uploads
 - more integration tests for route-level behavior
+- support for `unlisted` visibility and public share links
 
 ---
 
-> This README is current for the backend implementation up to the completed upload and CRUD phases. Permissions and advanced sharing are planned for the next stage.
+> This README is current for the backend implementation with upload session flow, file/folder CRUD, and permission/share APIs ready for frontend integration.

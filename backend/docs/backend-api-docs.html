@@ -466,7 +466,70 @@ If-None-Match: &lt;etag&gt;
         </section>
 
         <section>
-            <h2>5. Preview</h2>
+            <h2>5. Permission management</h2>
+
+            <div class="endpoint">
+                <h4><span class="method GET">GET</span> <span class="path">/api/permission/:objectType/:objectId</span>
+                </h4>
+                <p>List permissions for a file or folder.</p>
+                <div class="section-title">Path parameters</div>
+                <pre>
+objectType: file | folder
+objectId: string
+</pre>
+                <div class="section-title">Response</div>
+                <pre>{
+  "success": true,
+  "permissions": [
+    {
+      "userId": "...",
+      "role": "viewer|editor|owner",
+      "createdAt": "..."
+    }
+  ]
+}</pre>
+            </div>
+
+            <div class="endpoint">
+                <h4><span class="method POST">POST</span> <span class="path">/api/permission</span></h4>
+                <p>Grant or update permission for a user on a file or folder.</p>
+                <div class="section-title">Body</div>
+                <pre>{
+  "objectType": "file|folder",
+  "objectId": "string",
+  "role": "viewer|editor|owner",
+  "targetUserId": "string (optional)",
+  "targetUserEmail": "string (optional)"
+}</pre>
+                <div class="section-title">Response</div>
+                <pre>{
+  "success": true,
+  "permission": {
+    "id": "...",
+    "userId": "...",
+    "objectId": "...",
+    "objectType": "file|folder",
+    "role": "viewer|editor|owner",
+    "createdAt": "..."
+  }
+}</pre>
+            </div>
+
+            <div class="endpoint">
+                <h4><span class="method DELETE">DELETE</span> <span class="path">/api/permission</span></h4>
+                <p>Revoke permission for a user on a file or folder.</p>
+                <div class="section-title">Body</div>
+                <pre>{
+  "objectType": "file|folder",
+  "objectId": "string",
+  "targetUserId": "string (optional)",
+  "targetUserEmail": "string (optional)"
+}</pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>6. Preview</h2>
 
             <div class="endpoint">
                 <h4><span class="method GET">GET</span> <span class="path">/api/preview/folder/:folderId</span></h4>
@@ -475,30 +538,34 @@ If-None-Match: &lt;etag&gt;
         </section>
 
         <section>
-            <h2>6. Permission notes</h2>
+            <h2>7. Permission notes</h2>
             <p>Current permission logic is implemented in middleware and validation layers:</p>
             <ul>
                 <li>Folder creation requires <code>editor</code> access to the parent folder.</li>
                 <li>Upload session creation requires edit access to the target folder.</li>
-                <li>Upload chunk, finalize, and status endpoints require the session file to belong to the authenticated
-                    user.</li>
+                <li>Upload chunk, finalize, and status endpoints require editor access to the associated file.</li>
                 <li>File and folder operations validate ownership or explicit permissions via <code>userService</code>.
                 </li>
+                <li>Existing permissions support <code>viewer</code>, <code>editor</code>, and <code>owner</code> roles.
+                </li>
+                <li>File access can inherit permissions from the parent folder chain.</li>
+                <li>Public objects allow viewer access without an explicit permission row.</li>
             </ul>
         </section>
 
         <section>
-            <h2>7. Error handling</h2>
+            <h2>8. Error handling</h2>
             <p>Errors are returned as JSON with an HTTP status code and an error message. Example:</p>
             <pre>{
   "error": "Invalid header format"
 }</pre>
             <p>Validation failures generally return <code>400</code>. Unauthorized access returns <code>401</code> or
-                <code>403</code>.</p>
+                <code>403</code>.
+            </p>
         </section>
 
         <section>
-            <h2>8. Implementation details</h2>
+            <h2>9. Implementation details</h2>
             <p>The backend uses:</p>
             <ul>
                 <li>Express 5</li>

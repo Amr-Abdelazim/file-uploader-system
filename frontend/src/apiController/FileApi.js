@@ -1,16 +1,11 @@
-import AuthApi from "./AuthApi";
+import client from '../api/client';
+
 class FileApi {
     constructor() { }
+
     async downloadFile(fileId) {
-        const access_token = await AuthApi.getAccessToken();
-        console.log("hi");
-        const res = await fetch('/api/file/download/' + fileId, {
-            method: 'GET',
-            headers: {
-                Authorization: 'Bearer ' + access_token
-            }
-        });
-        return res;
+        // return raw response for streaming/blobs
+        return await client.request(`/api/file/download/${fileId}`, { method: 'GET', raw: true });
     }
 }
 

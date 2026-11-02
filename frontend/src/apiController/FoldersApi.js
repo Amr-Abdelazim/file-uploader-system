@@ -1,57 +1,33 @@
-import AuthApi from "./AuthApi";
+import client from '../api/client';
+
 class FolderApi {
     constructor() {
         this.root = null;
     }
+
     async getRoot() {
         if (this.root) return this.root;
-        const access_token = await AuthApi.getAccessToken();
-        const res = await fetch('/api/folder/root', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: "Bearer " + access_token,
-            }
-        }).then(async (res) => await res.json());
-        console.log(res);
-        if (!res.id) return null;
+        const res = await client.request('/api/folder/root');
+        if (!res || !res.id) return null;
         this.root = res.id;
         return res.id;
     }
+
     async getFolderPreview(folderId) {
-        const access_token = await AuthApi.getAccessToken();
-        const res = await fetch('/api/preview/folder/' + folderId, {
-            method: 'GET',
-            headers: {
-                Authorization: 'Bearer ' + access_token
-            }
-
-        }).then(async (res) => res.json());
-
-        return res;
+        if (!folderId) return null;
+        return await client.request(`/api/preview/folder/${folderId}`);
     }
+
     async checkFolder(folderId) {
-        const access_token = await AuthApi.getAccessToken();
-        const res = await fetch('/api/folder/check/' + folderId, {
-            method: 'GET',
-            headers: {
-                Authorization: 'Bearer ' + access_token
-            }
-
-        });
-        if (res.status != 200) return false;
-        return true;
+        const res = await client.request(`/api/folder/check/${folderId}`, { method: 'GET', raw: true });
+        return res.status === 200;
     }
-    async getFolderPath(folderId, maxPathLength = 5) {
-        const access_token = await AuthApi.getAccessToken();
-        const res = await fetch(`/api/folder/path/${folderId}?pathLength=${maxPathLength}`, {
-            method: 'GET',
-            headers: {
-                Authorization: 'Bearer ' + access_token
-            }
-        }).then(async (res) => await res.json());
 
+    async getFolderPath(folderId, maxPathLength = 5) {
+        const res = await client.request(`/api/folder/path/${folderId}?pathLength=${maxPathLength}`);
+        if (!res) return [];
         return res.reverse();
     }
 }
+
 export default new FolderApi();

@@ -1,21 +1,18 @@
-import AuthApi from "./AuthApi";
-class TransfereApi {
-    constructor() {
+import client from '../api/client';
 
-    }
+class TransfereApi {
+    constructor() { }
+
     async upload(rootFolder, formData) {
-        const accessToken = await AuthApi.getAccessToken();
-        const res = await fetch(
-            "/api/upload/" + rootFolder,
-            {
-                method: "POST",
-                headers: {
-                    Authorization: "Bearer " + accessToken,
-                },
-                body: formData,
-            }
-        );
-        return await res.text();
+        const path = rootFolder ? `/api/upload/${rootFolder}` : '/api/upload';
+        // Use raw response because upload endpoints may return non-json
+        const res = await client.request(path, { method: 'POST', body: formData, raw: true });
+        try {
+            return await res.text();
+        } catch (e) {
+            return res;
+        }
     }
 }
+
 export default new TransfereApi();
